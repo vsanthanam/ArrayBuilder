@@ -70,7 +70,7 @@ struct BuilderSyntaxTests {
 
     @Test("An empty builder produces an empty array")
     func emptyBuilder() {
-        let result = [Int] {}
+        let result: [Int] = Array {}
         #expect(result.isEmpty)
     }
 
@@ -92,10 +92,11 @@ struct BuilderSyntaxTests {
     @Test("A statement that stops the program exits before the array is built")
     func neverStatement() async {
         await #expect(processExitsWith: .failure) {
-            _ = [Int] {
+            let result: [Int] = Array {
                 1
                 fatalError("The builder should never reach this point")
             }
+            _ = result
         }
     }
 
