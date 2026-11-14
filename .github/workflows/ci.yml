@@ -18,36 +18,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  swiftformat:
-    name: Run SwiftFormat
-    runs-on: macos-26
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Select Xcode Version
-        run: ./.scripts/xcode-select
-      - name: Lint with SwiftFormat
-        run: ./.scripts/lint-swiftformat
-
-  lint-docc:
-    name: Validate Documentation
-    runs-on: macos-26
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Select Xcode Version
-        run: ./.scripts/xcode-select
-      - name: Validate Documentation
-        run: ./.scripts/lint-docc
-
   build-macos-spm:
     name: Build ArrayBuilder (macOS)
-    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            runner: "macos-26"
+            xcode: "26.6"
+          - swift: "6.4"
+            runner: "xcode-27"
+            xcode: "27.2"
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Select Xcode Version
-        run: ./.scripts/xcode-select 26.6
+        run: ./.scripts/xcode-select ${{ matrix.xcode }}
       - name: Build ArrayBuilder
         run: swift build -v --build-tests --build-path .build
       - name: Compress Build
@@ -55,22 +44,33 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v7
         with:
-          name: macos-build
+          name: macos-build-${{ matrix.swift }}
           path: build.zip
 
   test-macos-spm:
     name: Test ArrayBuilder (macOS)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            runner: "macos-26"
+            xcode: "26.6"
+          - swift: "6.4"
+            runner: "xcode-27"
+            xcode: "27.2"
     needs: build-macos-spm
-    runs-on: macos-26
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Select Xcode Version
-        run: ./.scripts/xcode-select 26.6
+        run: ./.scripts/xcode-select ${{ matrix.xcode }}
       - name: Download Build
         uses: actions/download-artifact@v8
         with:
-          name: macos-build
+          name: macos-build-${{ matrix.swift }}
           path: .
       - name: Decompress Build
         run: unzip build.zip
@@ -79,9 +79,18 @@ jobs:
 
   build-ubuntu-spm:
     name: Build ArrayBuilder (Ubuntu)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+          - swift: "6.4"
+            toolchain: "6.4.2"
     runs-on: ubuntu-latest
     container:
-      image: swift:6.3.3
+      image: swift:${{ matrix.toolchain }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -94,22 +103,31 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v7
         with:
-          name: ubuntu-build
+          name: ubuntu-build-${{ matrix.swift }}
           path: build.zip
 
   test-ubuntu-spm:
     name: Test ArrayBuilder (Ubuntu)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+          - swift: "6.4"
+            toolchain: "6.4.2"
     needs: build-ubuntu-spm
     runs-on: ubuntu-latest
     container:
-      image: swift:6.3.3
+      image: swift:${{ matrix.toolchain }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download Build
         uses: actions/download-artifact@v8
         with:
-          name: ubuntu-build
+          name: ubuntu-build-${{ matrix.swift }}
           path: .
       - name: Install `unzip`
         run: apt-get update && apt-get install -y unzip
@@ -120,6 +138,15 @@ jobs:
 
   build-windows-spm:
     name: Build ArrayBuilder (Windows)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+          - swift: "6.4"
+            toolchain: "6.4.2"
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -127,8 +154,8 @@ jobs:
       - name: Setup Swift
         uses: compnerd/gha-setup-swift@main
         with:
-          swift-version: swift-6.3.3-release
-          swift-build: 6.3.3-RELEASE
+          swift-version: swift-${{ matrix.toolchain }}-release
+          swift-build: ${{ matrix.toolchain }}-RELEASE
       - name: Build ArrayBuilder
         run: swift build -v --build-tests --disable-xctest --build-path .build -c debug -Xlinker /INCREMENTAL:NO
       - name: Compress Build
@@ -138,11 +165,20 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v7
         with:
-          name: windows-build
+          name: windows-build-${{ matrix.swift }}
           path: build.zip
 
   test-windows-spm:
     name: Test ArrayBuilder (Windows)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+          - swift: "6.4"
+            toolchain: "6.4.2"
     needs: build-windows-spm
     runs-on: windows-latest
     steps:
@@ -151,12 +187,12 @@ jobs:
       - name: Setup Swift
         uses: compnerd/gha-setup-swift@main
         with:
-          swift-version: swift-6.3.3-release
-          swift-build: 6.3.3-RELEASE
+          swift-version: swift-${{ matrix.toolchain }}-release
+          swift-build: ${{ matrix.toolchain }}-RELEASE
       - name: Download Build
         uses: actions/download-artifact@v8
         with:
-          name: windows-build
+          name: windows-build-${{ matrix.swift }}
           path: .
       - name: Decompress Build
         shell: pwsh
@@ -167,19 +203,36 @@ jobs:
 
   build-wasm-spm:
     name: Build ArrayBuilder (WebAssembly)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+            sdk: "swift-6.3.3-RELEASE_wasm"
+            url: "https://download.swift.org/swift-6.3.3-release/wasm-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz"
+            checksum: "cabfa08b73bb8ac783927ecd15fa386e99d0c139c5f232445067bcf58379cae7"
+          - swift: "6.4"
+            toolchain: "6.4.2"
+            sdk: "swift-6.4.2-RELEASE_wasm"
+            url: "https://download.swift.org/swift-6.4.2-release/wasm-sdk/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE_wasm.artifactbundle.tar.gz"
+            checksum: "83baca83553f8c443cda7b84800912e6e709c3acd2e7ebf277794ca5836c0da5"
+            # Test binaries are only built (and run, see test-wasm-spm) on 6.4.
+            extra-flags: "--build-tests"
     runs-on: ubuntu-latest
     container:
-      image: swift:6.3.3
+      image: swift:${{ matrix.toolchain }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Swift WASM
+      - name: Setup Swift WASM (${{ matrix.swift }})
         run: |
-          swift sdk install https://download.swift.org/swift-6.3.3-release/wasm-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz \
-            --checksum cabfa08b73bb8ac783927ecd15fa386e99d0c139c5f232445067bcf58379cae7
+          swift sdk install ${{ matrix.url }} \
+            --checksum ${{ matrix.checksum }}
           swift sdk list
-      - name: Build ArrayBuilder
-        run: swift build -v --swift-sdk swift-6.3.3-RELEASE_wasm --build-path .build
+      - name: Build ArrayBuilder (${{ matrix.swift }})
+        run: swift build -v --swift-sdk ${{ matrix.sdk }} --build-path .build ${{ matrix.extra-flags }}
       - name: Install `zip`
         run: apt-get update && apt-get install -y zip
       - name: Compress Build
@@ -187,31 +240,242 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v7
         with:
-          name: wasm-build
+          name: wasm-build-${{ matrix.swift }}
           path: build.zip
 
-  build-android-spm:
-    name: Build ArrayBuilder (Android)
+  test-wasm-spm:
+    name: Test ArrayBuilder (WebAssembly)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.4"]
+        include:
+          - swift: "6.4"
+            toolchain: "6.4.2"
+            sdk: "swift-6.4.2-RELEASE_wasm"
+            url: "https://download.swift.org/swift-6.4.2-release/wasm-sdk/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE_wasm.artifactbundle.tar.gz"
+            checksum: "83baca83553f8c443cda7b84800912e6e709c3acd2e7ebf277794ca5836c0da5"
+    needs: build-wasm-spm
     runs-on: ubuntu-latest
+    container:
+      image: swift:${{ matrix.toolchain }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Build ArrayBuilder
-        uses: skiptools/swift-android-action@v2
+      - name: Setup Swift WASM (${{ matrix.swift }})
+        run: |
+          swift sdk install ${{ matrix.url }} \
+            --checksum ${{ matrix.checksum }}
+          swift sdk list
+      - name: Download Build
+        uses: actions/download-artifact@v8
         with:
-          swift-version: "6.3"
-          build-package: true
-          build-tests: false
-          run-tests: false
+          name: wasm-build-${{ matrix.swift }}
+          path: .
+      - name: Install `unzip`
+        run: apt-get update && apt-get install -y unzip
+      - name: Decompress Build
+        run: unzip build.zip
+      - name: Test ArrayBuilder (${{ matrix.swift }})
+        # The toolchain ships WasmKit, which SwiftPM uses to execute the wasm test binaries.
+        run: swift test --swift-sdk ${{ matrix.sdk }} --build-path .build --skip-build
+
+  build-android-spm:
+    name: Build ArrayBuilder (Android)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.3", "6.4"]
+        include:
+          - swift: "6.3"
+            toolchain: "6.3.3"
+            sdk: "swift-6.3.3-RELEASE_android"
+            url: "https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz"
+            checksum: "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
+            android-api: "28"
+          - swift: "6.4"
+            toolchain: "6.4.2"
+            sdk: "swift-6.4.2-RELEASE_android"
+            url: "https://download.swift.org/swift-6.4.2-release/android-sdk/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE_android.artifactbundle.tar.gz"
+            checksum: "4d6ad63ea74becd58e123ff58b1b48c3be5ec0db0dff0ea5abe37ac007dd3233"
+            android-api: "23"
+            # Test binaries are only built (and run, see test-android-spm) on 6.4.
+            extra-flags: "--build-tests"
+    runs-on: ubuntu-latest
+    container:
+      image: swift:${{ matrix.toolchain }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Swift Android (${{ matrix.swift }})
+        run: |
+          swift sdk install ${{ matrix.url }} \
+            --checksum ${{ matrix.checksum }}
+          swift sdk list
+      - name: Install `curl` and `unzip`
+        run: apt-get update && apt-get install -y curl unzip
+      - name: Install Android NDK
+        run: curl -fSL -o ndk.zip https://dl.google.com/android/repository/android-ndk-r30-linux.zip
+      - name: Unzip Android NDK
+        run: unzip -qo ndk.zip
+      - name: Set ANDROID_NDK_HOME
+        run: echo "ANDROID_NDK_HOME=$PWD/android-ndk-r30" >> "$GITHUB_ENV"
+      - name: Link NDK into Swift SDK
+        # The bundle's `ndk-sysroot` is a placeholder until this script points it at a real NDK.
+        # SwiftPM installs SDKs under the passwd home directory, not `$HOME` (which Actions overrides
+        # inside containers), so ask it where the bundle actually is.
+        run: |
+          SDK_DIR=$(swift sdk configure --show-configuration ${{ matrix.sdk }} x86_64-unknown-linux-android${{ matrix.android-api }} | sed -n 's/^sdkRootPath: //p' | xargs dirname)
+          echo "SWIFT_ANDROID_SDK_DIR=$SDK_DIR" >> "$GITHUB_ENV"
+          bash "$SDK_DIR/scripts/setup-android-sdk.sh"
+      - name: Build ArrayBuilder (${{ matrix.swift }})
+        # Select the SDK by target triple rather than bundle ID. The bundle defines one SDK per
+        # architecture and API level under a single ID, and SwiftPM 6.3 picks the first (aarch64)
+        # when given the ID; `--triple` only disambiguates on 6.4 and later.
+        run: swift build -v --swift-sdk x86_64-unknown-linux-android${{ matrix.android-api }} --build-path .build ${{ matrix.extra-flags }}
+      - name: Stage Swift Runtime
+        # The test binaries link the Swift runtime dynamically. Ship the SDK's runtime libraries in
+        # the artifact so test-android-spm can push them to the emulator without installing the SDK.
+        run: |
+          mkdir -p .build/android-runtime
+          cp "$SWIFT_ANDROID_SDK_DIR/swift-resources/usr/lib/swift-x86_64/android/"*.so .build/android-runtime/
       - name: Install `zip`
-        run: sudo apt-get update && sudo apt-get install -y zip
+        run: apt-get update && apt-get install -y zip
       - name: Compress Build
         run: zip -r build.zip .build
       - name: Upload Build
         uses: actions/upload-artifact@v7
         with:
-          name: android-build
+          name: android-build-${{ matrix.swift }}
           path: build.zip
+
+  test-android-spm:
+    name: Test ArrayBuilder (Android)
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ["6.4"]
+        include:
+          - swift: "6.4"
+            # Emulator system image. Must be at least the `android-api` the build targeted, and at
+            # least 24 so that `adb shell` propagates exit codes.
+            emulator-api: "34"
+    needs: build-android-spm
+    runs-on: ubuntu-latest
+    env:
+      REMOTE_DIR: /data/local/tmp/arraybuilder-tests
+    steps:
+      - name: Download Build
+        uses: actions/download-artifact@v8
+        with:
+          name: android-build-${{ matrix.swift }}
+          path: .
+      - name: Decompress Build
+        run: unzip -q build.zip
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install Android Emulator (API ${{ matrix.emulator-api }})
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install "emulator" "platform-tools" "system-images;android-${{ matrix.emulator-api }};default;x86_64"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          # Pin the AVD directory so `avdmanager` and `emulator` agree on where AVDs live.
+          mkdir -p "$HOME/.android/avd"
+          echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"
+      - name: Create Emulator
+        run: |
+          echo no | avdmanager create avd --force --name arraybuilder --package "system-images;android-${{ matrix.emulator-api }};default;x86_64"
+          emulator -list-avds
+      - name: Boot Emulator
+        run: |
+          ls -l /dev/kvm
+          emulator -accel-check
+          emulator -avd arraybuilder -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -gpu swiftshader_indirect -accel on > emulator.log 2>&1 &
+          EMULATOR_PID=$!
+          for _ in $(seq 1 60); do
+            if ! kill -0 "$EMULATOR_PID" 2> /dev/null; then
+              echo "::error::Emulator exited before boot completed"
+              cat emulator.log
+              exit 1
+            fi
+            if [ "$(adb shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
+              adb shell getprop ro.build.version.release
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Emulator did not finish booting within 5 minutes"
+          tail -n 100 emulator.log
+          exit 1
+      - name: Push Tests
+        # Each `<Target>-test-runner` loads its `<Target>.so` from `$ORIGIN`, so everything lives in
+        # one flat directory alongside the Swift runtime and the NDK's libc++.
+        run: |
+          # ArrayBuilder has no resource bundles today; let that glob match nothing.
+          shopt -s nullglob
+          mkdir stage
+          cp -R .build/debug/*-test-runner .build/debug/*.so .build/debug/*.bundle .build/android-runtime/*.so stage/
+          cp "$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so" stage/
+          adb push stage "$REMOTE_DIR"
+          adb shell "chmod +x $REMOTE_DIR/*-test-runner"
+      - name: Test ArrayBuilder (${{ matrix.swift }})
+        run: |
+          runners=(.build/debug/*-test-runner)
+          if [ ! -e "${runners[0]}" ]; then
+            echo "::error::No test runners found in .build/debug"
+            exit 1
+          fi
+          for runner in "${runners[@]}"; do
+            name=$(basename "$runner")
+            echo "::group::$name"
+            adb shell "cd $REMOTE_DIR && LD_LIBRARY_PATH=. ./$name --testing-library swift-testing"
+            echo "::endgroup::"
+          done
+      - name: Print Emulator Log
+        if: failure()
+        run: tail -n 200 emulator.log || true
+      - name: Upload Emulator Log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-emulator-log-${{ matrix.swift }}
+          path: emulator.log
+
+  lint:
+    name: Lint
+    runs-on: xcode-27
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install Toolchain
+        uses: jdx/mise-action@v4
+        with:
+          version: 2026.8.15
+      - name: Select Xcode Version
+        run: ./.scripts/xcode-select
+      - name: Lint Sources
+        run: mise run lint
+
+  lint-docc:
+    name: Validate Documentation
+    runs-on: xcode-27
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install Toolchain
+        uses: jdx/mise-action@v4
+        with:
+          version: 2026.8.15
+      - name: Select Xcode Version
+        run: ./.scripts/xcode-select
+      - name: Validate Documentation
+        run: mise run lint-docc
 
   validate-pr:
     name: Validate Pull Request
@@ -224,8 +488,10 @@ jobs:
       - build-windows-spm
       - test-windows-spm
       - build-wasm-spm
+      - test-wasm-spm
       - build-android-spm
-      - swiftformat
+      - test-android-spm
+      - lint
       - lint-docc
     runs-on: ubuntu-latest
     steps:
@@ -238,8 +504,10 @@ jobs:
             [[ "${{ needs.build-windows-spm.result }}" == "failure" ]] || \
             [[ "${{ needs.test-windows-spm.result }}" == "failure" ]] || \
             [[ "${{ needs.build-wasm-spm.result }}" == "failure" ]] || \
+            [[ "${{ needs.test-wasm-spm.result }}" == "failure" ]] || \
             [[ "${{ needs.build-android-spm.result }}" == "failure" ]] || \
-            [[ "${{ needs.swiftformat.result }}" == "failure" ]] || \
+            [[ "${{ needs.test-android-spm.result }}" == "failure" ]] || \
+            [[ "${{ needs.lint.result }}" == "failure" ]] || \
             [[ "${{ needs.lint-docc.result }}" == "failure" ]]; then
             echo "❌ Required job failed."
             exit 1

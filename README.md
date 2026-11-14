@@ -3,8 +3,8 @@
 [![MIT License](https://img.shields.io/github/license/vsanthanam/ArrayBuilder)](https://github.com/vsanthanam/ArrayBuilder/blob/main/LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/vsanthanam/ArrayBuilder?include_prereleases)](https://github.com/vsanthanam/ArrayBuilder/releases)
 [![Build Status](https://img.shields.io/github/check-runs/vsanthanam/ArrayBuilder/main)](https://github.com/vsanthanam/ArrayBuilder/actions)
-[![Swift Version](https://img.shields.io/badge/swift-6.3-critical)](https://swift.org)
-[![Xcode](https://img.shields.io/badge/xcode-26.5-blue)](https://developer.apple.com/xcode/)
+[![Swift Version](https://img.shields.io/badge/swift-6.4-critical)](https://swift.org)
+[![Xcode](https://img.shields.io/badge/xcode-27.2-blue)](https://developer.apple.com/xcode/)
 [![Documentation](https://img.shields.io/badge/Documentation-Swift%20Package%20Index-8A2BE2)](https://swiftpackageindex.com/vsanthanam/ArrayBuilder/documentation)
 
 A declarative library for composing arrays in Swift
@@ -97,6 +97,20 @@ To add ArrayBuilder as a dependency to an Xcode Project:
 - Enter package URL `https://github.com/vsanthanam/ArrayBuilder.git` and select your release of choice.
 
 Other distribution mechanisms like CocoaPods or Carthage may be added in the future.
+
+### Swift Language Support
+
+ArrayBuilder has been tested to work with the following platforms and Swift toolchains:
+
+| Platform | Swift 6.3 | Swift 6.4 |
+|----------|-----------|-----------|
+| macOS | ✅ Supported & Tested | ✅ Supported & Tested |
+| Linux (Ubuntu) | ✅ Supported & Tested | ✅ Supported & Tested |
+| Windows | ✅ Supported & Tested | ✅ Supported & Tested |
+| WebAssembly | ⚠️ Supported (No Tests) | ✅ Supported & Tested |
+| Android | ⚠️ Supported (No Tests) | ✅ Supported & Tested |
+
+All supported platforms undergo continuous integration testing to ensure compatibility across different environments. Other platforms such as FreeBSD may also work, but are not validated in the built-in GitHub Actions powered CI environment.
 
 ## Usage & Documentation
 

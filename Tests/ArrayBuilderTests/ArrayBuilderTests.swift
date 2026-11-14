@@ -89,16 +89,18 @@ struct BuilderSyntaxTests {
         #expect(sideEffects == 1)
     }
 
-    @Test("A statement that stops the program exits before the array is built")
-    func neverStatement() async {
-        await #expect(processExitsWith: .failure) {
-            let result: [Int] = Array {
-                1
-                fatalError("The builder should never reach this point")
+    // Exit tests are not supported on WebAssembly or Android.
+    #if !os(WASI) && !os(Android)
+        @Test("A statement that stops the program exits before the array is built")
+        func neverStatement() async {
+            await #expect(processExitsWith: .failure) {
+                let _: [Int] = Array {
+                    1
+                    fatalError("The builder should never reach this point")
+                }
             }
-            _ = result
         }
-    }
+    #endif
 
     @Test("An if without an else includes values only when the condition holds", arguments: [true, false])
     func ifWithoutElse(condition: Bool) {

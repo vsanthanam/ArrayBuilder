@@ -1,0 +1,38 @@
+[tools]
+swiftformat = "0.64.0"
+
+[tasks."format:swift"]
+description = "Format Swift Sources"
+run = "swiftformat ."
+
+[tasks."format:mise"]
+description = "Format Mise Configuration"
+run = "mise fmt"
+
+[tasks.format]
+description = "Format Sources"
+depends = ["format:swift", "format:mise"]
+
+[tasks."lint:swift"]
+description = "Lint Swift Sources"
+run = "swiftformat . --lint"
+
+[tasks."lint:mise"]
+description = "Lint Mise Configuration"
+run = "mise fmt --check"
+
+[tasks.lint]
+description = "Lint Sources"
+depends = ["lint:*"]
+
+[tasks.build]
+description = "Build ArrayBuilder"
+run = "swift build"
+
+[tasks.test]
+description = "Test ArrayBuilder"
+run = "swift test"
+
+[tasks.lint-docc]
+description = "Build documentation and fail on warnings"
+run = "./.scripts/lint-docc"

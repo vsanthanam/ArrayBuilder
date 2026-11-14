@@ -109,6 +109,7 @@
 /// ### Supporting Loops
 ///
 /// - ``buildArray(_:)``
+@available(macOS 12.0, macCatalyst 15.0, iOS 15.0, watchOS 9.0, tvOS 15.0, visionOS 1.0, *)
 @resultBuilder
 public enum ArrayBuilder<T> {
 
@@ -281,7 +282,7 @@ public enum ArrayBuilder<T> {
     ///         2
     ///     }
     /// }
-    /// // [1, 2] if includeTwo is true; otherwise [1]
+    /// // [1, 2] if `includeTwo` is `true`; otherwise [1]
     /// ```
     ///
     /// - Parameter component: The partial array from the branch,
@@ -335,7 +336,7 @@ extension Array {
     ///         4 ... 6
     ///     }
     /// }
-    /// // [1, 2, 3, 4, 5, 6] if includeMore is true; otherwise [1, 2, 3]
+    /// // [1, 2, 3, 4, 5, 6] if `includeMore` is `true`; otherwise [1, 2, 3]
     /// ```
     ///
     /// - Parameter builder: A closure that lists the values for the new array.

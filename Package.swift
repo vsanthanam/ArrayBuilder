@@ -1,4 +1,4 @@
-// swift-tools-version: 6.3
+// swift-tools-version: 6.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,11 +6,12 @@ import PackageDescription
 let package = Package(
     name: "ArrayBuilder",
     platforms: [
-        .macOS(.v26),
-        .iOS(.v26),
-        .watchOS(.v26),
-        .tvOS(.v26),
-        .visionOS(.v26)
+        .macOS(.v12),
+        .macCatalyst(.v15),
+        .iOS(.v15),
+        .watchOS(.v9),
+        .tvOS(.v15),
+        .visionOS(.v1)
     ],
     products: [
         .library(
@@ -24,10 +25,6 @@ let package = Package(
         .package(
             url: "https://github.com/swiftlang/swift-docc-plugin.git",
             exact: "1.5.0"
-        ),
-        .package(
-            url: "https://github.com/nicklockwood/SwiftFormat.git",
-            exact: "0.61.1"
         )
     ],
     targets: [
